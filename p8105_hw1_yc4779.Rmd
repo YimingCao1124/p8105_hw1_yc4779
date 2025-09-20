@@ -1,0 +1,84 @@
+---
+title: "P8105_homework1_yc4779"
+author: "Yiming_Cao"
+output: github_document
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+library(moderndive)
+library(tidyverse)
+set.seed(8105)
+```
+# Problem 1 — early_january_weather
+```{r}
+# Load the dataset
+data("early_january_weather")
+weather <- early_january_weather
+
+```
+
+**Description:**  
+The dataset contains **`r nrow(weather)` rows** and **`r ncol(weather)` columns**.  
+Key variables include:  
+- `time_hour` (timestamp of the observation, POSIXct format)  
+- `temp` (temperature in °F, mean = **`r round(mean(weather$temp, na.rm = TRUE), 2)`**)  
+- `humid` (relative humidity, ranging from 0 to 1)  
+Other variables include `wind_speed` (mph), `visib` (miles, visibility), and `pressure` (millibars).
+
+```{r}
+# Scatterplot of temp vs time_hour colored by humidity
+p_temp <- ggplot(weather, aes(x = time_hour, y = temp, color = humid)) +
+  geom_point(alpha = 0.7) +
+  labs(
+    title = "NYC Early January: Temperature vs Time (Color = Humidity)",
+    x = "Time (hourly)",
+    y = "Temperature (°F)",
+    color = "Humidity"
+  ) +
+  theme_minimal()
+p_temp
+
+```
+
+
+**Plot description:**
+The scatterplot of temperature versus time shows a clear daily cycle, with higher temperatures during the day and lower temperatures at night. Periods with higher humidity (darker colors) tend to coincide with milder temperatures. In addition, short-term fluctuations are visible, reflecting changes in weather systems over the days.
+
+
+```{r}
+# Save the plot to figs folder
+if (!dir.exists("figs")) dir.create("figs")
+ggsave("figs/temp_vs_time.png", p_temp, width = 8, height = 5, dpi = 300)
+```
+# Problem 2 — Variable types and coercion
+```{r}
+n <- 10
+df_types <- tibble(
+  norm_samp   = rnorm(n),                          # numeric
+  is_positive = rnorm(n) > 0,                      # logical
+  char_vec    = sample(letters[1:5], n, TRUE),     # character
+  factor_vec  = factor(
+    sample(c("low","medium","high"), n, TRUE),
+    levels = c("low","medium","high")
+  )
+)
+df_types
+```
+```{r}
+mean_numeric <- mean(pull(df_types, norm_samp))
+mean_logical <- mean(pull(df_types, is_positive))
+
+list(mean_numeric = mean_numeric, mean_logical = mean_logical)
+```
+
+The numeric variable can be averaged directly. The logical variable is treated as 0/1, so the mean corresponds to the proportion of TRUE values. Character and factor variables cannot be averaged because they do not have inherent numeric meaning.
+
+
+```{r}
+logical_num <- as.numeric(df_types$is_positive)  # TRUE→1, FALSE→0
+char_num    <- as.numeric(df_types$char_vec)     # character→NA
+factor_num  <- as.numeric(df_types$factor_vec)   # factor→level codes (1,2,3)
+```
+
+Logical variables are converted to 0 and 1, which explains why their mean equals the proportion of TRUE values. Character variables convert to NA because they have no numeric mapping. Factor variables convert to their underlying integer codes (1, 2, 3), which are just labels and do not carry real quantitative meaning.
+
